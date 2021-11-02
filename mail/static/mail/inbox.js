@@ -30,4 +30,13 @@ function load_mailbox(mailbox) {
 
   // Show the mailbox name
   document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
+
+  // Content
+  fetch(`/emails/${mailbox}`)
+  .then(response => response.json())
+  .then(data =>{
+      console.log(data)
+      document.querySelector('#emails-view').innerHTML = `<p>${data}</p>`;
+  })
+
 }
