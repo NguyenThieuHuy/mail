@@ -10,8 +10,12 @@
     <a class="btn btn-sm btn-outline-primary" href="{% url 'logout' %}">Log Out</a>
     <hr>
 
-    <div id="emails-view">
-    
+    <div id="emails-view"> </div>
+    {% comment %} <button id="desc">Descending</button>
+    <button id="asc">Ascending</button>
+    <div id="album-container">    </div> {% endcomment %}
+    <div id="emails">
+
     </div>
 
     <div id="compose-view">
@@ -32,6 +36,3 @@
     </div>
 {% endblock %}
 
-{% block script %}
-    <script src="{% static 'mail/inbox.js' %}"></script>
-{% endblock %}
