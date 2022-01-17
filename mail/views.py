@@ -14,7 +14,9 @@ def index(request):
 
     # Authenticated users view their inbox
     if request.user.is_authenticated:
-        return render(request, "mail/inbox.html")
+        return render(request, "mail/inbox.html",{
+         "name" :"index"
+    })
 
     # Everyone else is prompted to sign in
     else:
@@ -82,11 +84,11 @@ def mailbox(request, mailbox):
             )
     elif mailbox == "sent":
         emails = Email.objects.filter(
-            user=request.user, sender=request.user
+            user=request.user, sender=request.user, archived=False
         )
     elif mailbox == "archive":
         emails = Email.objects.filter(
-            recipients=request.user, archived=True
+            archived=True
         )
     else:
         return JsonResponse({"error": "Invalid mailbox."}, status=400)
@@ -102,7 +104,7 @@ def email(request, email_id):
 
     # Query for requested email
     try:
-        email = Email.objects.get(user=request.user, pk=email_id)
+        email = Email.objects.get(pk=email_id)
     except Email.DoesNotExist:
         return JsonResponse({"error": "Email not found."}, status=404)
 

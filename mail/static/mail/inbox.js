@@ -21,18 +21,35 @@ function compose_email() {
   document.querySelector('#compose-recipients').value = '';
   document.querySelector('#compose-subject').value = '';
   document.querySelector('#compose-body').value = '';
+  //ref_make compose work
+  document.querySelector('#compose-form').onsubmit = () => {
+    fetch('/emails', {
+      method: 'POST',
+      body: JSON.stringify({
+        recipients: document.querySelector('#compose-recipients').value,
+        subject: document.querySelector('#compose-subject').value,
+        body: document.querySelector('#compose-body').value
+      })
+    })
+      .then(response => response.json())
+      .then(result => {
+        // if (result["error"]) {
+        //   document.querySelector('#message').innerHTML = result["error"];
+        //   document.querySelector('.alert').style.display = 'block';
+        //   document.body.scrollTop = document.documentElement.scrollTop = 0;
+        // }
+        // else {
+          // document.querySelector('.alert').style.display = 'none';
+          load_mailbox('sent')
+        // }
+      });
+
+    return false;
+  };
+
 }
 
 function load_mailbox(mailbox) {
-  
-  // Show the mailbox and hide other views
-  document.querySelector('#emails-view').style.display = 'block';
-  document.querySelector('#emails').style.display = 'block';
-  document.querySelector('#compose-view').style.display = 'none';
-
-  // Show the mailbox name
-  document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
-
   // Content
   fetch(`/emails/${mailbox}`)
   .then(response => response.json())
@@ -41,27 +58,99 @@ function load_mailbox(mailbox) {
           const mail = document.createElement('div');
           mail.className = 'post';
           mail.setAttribute("class", `email-holder row d-flex `);
-   
+    
           mail.innerHTML = `
-          <div class="p-2">${i["sender"]}</div>
-          <div class="p-2">${i["subject"]}</div>
+          <div class="p-2">From:${i["sender"]}</div>
+          <div class="p-2">To:${i["recipients"]}</div>
           <div class="ml-auto p-2">${i["timestamp"]}</div>
-          <button class="hide">Hide</button>
+          <button onclick="archive(${i["id"]})" class="hide">Archive</button>
+          <button onclick="email_view(${i["id"]})">Show</button>
         `;  
-        document.querySelector('#emails').append(mail);
+        document.querySelector('#emails-view').append(mail);
+        //mails repeatedly stacking up when toggle between tabs if u use #emails
         }
 
   })
+  
+  // Show the mailbox and hide other views
+  document.querySelector('#emails-view').style.display = 'block';
+  document.querySelector('#emails').style.display = 'none';
+  document.querySelector('#compose-view').style.display = 'none';
+
+  // Show the mailbox name
+  document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
+
+
 }
-  document.addEventListener('click',event =>{
-        const element = event.target;
-        if (element.className === 'hide'){
-            element.parentElement.style.animationPlayState = "running";
-            element.parentElement.addEventListener('animationend', () => {
-                element.parentElement.remove();
-            });
-        }
+
+function email_view(id){
+  // Content
+  fetch(`/emails/${id}`)
+  .then(response => response.json())
+  .then(data =>{
+        document.querySelector('#emails').innerHTML=`
+        <div>From:${data["sender"]}</div>
+        <div>To:${data["recipients"]}</div>
+        <div>Date:${data["timestamp"]}</div>
+        <div>Subject:${data["subject"]}</div>
+        <div>Body: ${data["body"]}</div>
+        <div class = "email-holder row d-flex">
+        <button class="reply" >Reply</button>
+        <button onclick="load_mailbox('inbox')">Return</button>
+        </div>
+      `;  
+        document.querySelector('#emails-view').style.display = 'none';
+        document.querySelector('#emails').style.display = 'block';
+        document.querySelector('#compose-view').style.display = 'none';      
+        //mails repeatedly stacking up when toggle between tabs if u use #emails
+
+  })
+}
+
+function archive(id){
+  fetch(`/emails/${id}`)
+  .then(response => response.json())
+  .then(data =>{
+    if (data.archived == false) {
+      fetch(`/emails/${id}`,{
+        method: 'PUT',
+        body: JSON.stringify({
+            archived: true
+        })
     })
+    } else {
+      fetch(`/emails/${id}`,{
+        method: 'PUT',
+        body: JSON.stringify({
+            archived: false
+        })
+    })
+    }
+  })
+}
+
+document.addEventListener('click',event =>{
+    const element = event.target;
+    if (element.className === 'hide'){
+        element.parentElement.style.animationPlayState = "running";
+        element.parentElement.addEventListener('animationend', () => {
+            element.parentElement.remove();
+        });
+    }
+})
+
+
+
+
+  // document.addEventListener('click',event =>{
+  //       const element = event.target;
+  //       if (element.className === 'hide'){
+  //           element.parentElement.style.animationPlayState = "running";
+  //           element.parentElement.addEventListener('animationend', () => {
+  //               element.parentElement.remove();
+  //           });
+  //       }
+  //   })
 
 
 // let counter = 1;
@@ -178,6 +267,6 @@ function load_mailbox(mailbox) {
 //   }
 // }
 
-// // script.js
+// script.js
 // const app = new App();
 // app.loadAlbums();
